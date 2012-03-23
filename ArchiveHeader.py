@@ -3,9 +3,6 @@ from struct import *
 class ArchiveHeader:
     """Reads the archive header of the sc2 replay files."""
 
-    # There seems to be an initial description block before
-    # the 'traditional' MPQ data. That block is 1024 || 0x400
-    # bytes large.
     STARCRAFT_2_BUFFER            = 0x400
     STARCRAFT_2_MAGIC_NAME        = 'StarCraft II replay'
     STARCRAFT_2_MAGIC_NAME_OFFSET = 0x15
