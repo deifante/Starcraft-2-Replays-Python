@@ -1,4 +1,5 @@
 from struct import *
+
 class ArchiveHeader:
     """Reads the archive header of the sc2 replay files."""
     def __init__(self, file_name):
