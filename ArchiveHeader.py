@@ -2,6 +2,16 @@ from struct import *
 
 class ArchiveHeader:
     """Reads the archive header of the sc2 replay files."""
+
+    # There seems to be an initial description block before
+    # the 'traditional' MPQ data. That block is 1024 || 0x400
+    # bytes large.
+    STARCRAFT_2_BUFFER            = 0x400
+    STARCRAFT_2_MAGIC_NAME        = 'StarCraft II replay'
+    STARCRAFT_2_MAGIC_NAME_OFFSET = 0x15
+    STARCRAFT_2_MPQ_VALUE         = 458313805
+    MAGIC_MPQ_VALUE               = 441536589
+
     def __init__(self, file_name):
         """Instantiate a header reading object.
         Keyword arguments:
@@ -12,14 +22,30 @@ class ArchiveHeader:
         self.archive_size = 0
 
     def verify_file(self):
-        """Verify that this is, in fact, a Starcraft 2 replay file."""
+        """Verify that this is, in fact, a Starcraft 2 replay file.
+        I'm not quite sure right now what the deal is with the 1024
+        bytes at the start of the file that seems
+        """
         replay_file = open(self.file_name, 'rb')
-        data_buffer = replay_file.read(4)
-        magic_value = unpack('=i', data_buffer)[0]
+        magic_sc2_value = unpack('=i', replay_file.read(4))[0]
+        # Not exactly sure how this one works right now, but it's an
+        # "almost MPQ" magic file indicator. This one ends with 0x1b
+        # instead of 0x1a.
+        if ArchiveHeader.STARCRAFT_2_MPQ_VALUE != magic_sc2_value:
+            replay_file.close()
+            return False
+
+        replay_file.seek(ArchiveHeader.STARCRAFT_2_MAGIC_NAME_OFFSET)
+        replay_type = replay_file.read(len(ArchiveHeader.STARCRAFT_2_MAGIC_NAME))
+        if replay_type != ArchiveHeader.STARCRAFT_2_MAGIC_NAME:
+            replay_file.close()
+            return False
+
+        replay_file.seek(ArchiveHeader.STARCRAFT_2_BUFFER)
+        magic_value = unpack('=i', replay_file.read(4))[0]
 
         replay_file.close()
-        # First 4 bytes are M, P, Q, 0x1b
-        if 458313805 != magic_value:
+        if ArchiveHeader.MAGIC_MPQ_VALUE != magic_value:
             return False
         return True
 
@@ -27,14 +53,32 @@ class ArchiveHeader:
         """Read the contents of the MPQ Archive Header"""
         replay_file = open(self.file_name, 'rb')
         # Skip the magic file indicatior @ the start of the file
-        replay_file.seek(4)
+        replay_file.seek(ArchiveHeader.STARCRAFT_2_BUFFER + 4)
 
-        self.header_size, self.archive_size = unpack('=ii', replay_file.read(8))
+        self.header_size, self.archive_size = unpack('=II', replay_file.read(8))
         print 'header_size', self.header_size
         print 'archive_size', self.archive_size
 
-        self.format_version = unpack('=h', replay_file.read(2))[0]
+        self.format_version, self.sector_size_shift = unpack('=hB', replay_file.read(3))
         print 'format_version', self.format_version
+        print 'sector_size_shift', self.sector_size_shift
+
+        self.hash_table_offset, self.block_table_offset, self.hash_table_entries = \
+            unpack('=III', replay_file.read(12))
+        print 'hash_table_offset', self.hash_table_offset
+        print 'block_table_offset', self.block_table_offset
+        print 'hash_table_entries', self.hash_table_entries
+
+        self.block_table_entries = unpack('=I', replay_file.read(4))[0]
+        print 'block_table_entries', self.block_table_entries
+
+        # The following fields are only present after The Burning Crusade
+        self.extended_block_table_offset, self.hash_table_offset_high, self.block_table_offset_high = \
+            unpack('=QHH', replay_file.read(12))
+        print 'extended_block_table_offset', self.extended_block_table_offset
+        print 'hash_table_offset_high', self.hash_table_offset_high
+        print 'block_table_offset_high', self.block_table_offset_high
+
         replay_file.close()
 
 if __name__ == "__main__":
@@ -42,3 +86,5 @@ if __name__ == "__main__":
     if header.verify_file():
         print 'Valid File'
         header.read()
+    else:
+        print 'Not valid file'
