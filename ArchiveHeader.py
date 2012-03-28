@@ -1,84 +1,57 @@
 from struct import *
 
-class ArchiveHeader:
+class ArchiveHeader(object):
     """Reads the archive header of the sc2 replay files."""
 
-    STARCRAFT_2_BUFFER            = 0x400
-    STARCRAFT_2_MAGIC_NAME        = 'StarCraft II replay'
-    STARCRAFT_2_MAGIC_NAME_OFFSET = 0x15
-    STARCRAFT_2_MPQ_VALUE         = 458313805
-    MAGIC_MPQ_VALUE               = 441536589 #MPQ0x1A
-
-    def __init__(self, file_name):
+    MAGIC_MPQ_VALUE = 441536589 #MPQ0x1A
+    def __init__(self, replay_file, header_offset):
         """Instantiate a header reading object.
         Keyword arguments:
         file_name -- the full path of the file. May be relative or absolute.
+        header_offset -- distance from the start of the file to the start of the Archive Header block
         """
-        self.file_name = file_name
-        self.header_size = 0
-        self.archive_size = 0
-
-    def verify_file(self):
-        """Verify that this is, in fact, a Starcraft 2 replay file."""
-        replay_file = open(self.file_name, 'rb')
-        magic_sc2_value = unpack('=i', replay_file.read(4))[0]
-        # Not exactly sure how this one works right now, but it's an
-        # "almost MPQ" magic file indicator. This one ends with 0x1b
-        # instead of 0x1a.
-        if ArchiveHeader.STARCRAFT_2_MPQ_VALUE != magic_sc2_value:
-            replay_file.close()
-            return False
-
-        replay_file.seek(ArchiveHeader.STARCRAFT_2_MAGIC_NAME_OFFSET)
-        replay_type = replay_file.read(len(ArchiveHeader.STARCRAFT_2_MAGIC_NAME))
-        if replay_type != ArchiveHeader.STARCRAFT_2_MAGIC_NAME:
-            replay_file.close()
-            return False
-
-        replay_file.seek(ArchiveHeader.STARCRAFT_2_BUFFER)
-        magic_value = unpack('=i', replay_file.read(4))[0]
-
-        replay_file.close()
-        if ArchiveHeader.MAGIC_MPQ_VALUE != magic_value:
-            return False
-        return True
+        self.__archive_size                = 0
+        self.__block_table_entries         = 0
+        self.__block_table_offset          = 0
+        self.__block_table_offset_high     = 0
+        self.__extended_block_table_offset = 0
+        self.__format_version              = 0
+        self.__hash_table_entries          = 0
+        self.__hash_table_offset           = 0
+        self.__hash_table_offset_high      = 0
+        self.__header_offset               = header_offset
+        self.__header_size                 = 0
+        self.__replay_file                 = replay_file
+        self.__sector_size_shift           = 0
+        self.__replay_file.seek(0)        
 
     def read(self):
-        """Read the contents of the MPQ Archive Header"""
-        replay_file = open(self.file_name, 'rb')
-        # Skip the magic file indicatior @ the start of the file
-        replay_file.seek(ArchiveHeader.STARCRAFT_2_BUFFER + 4)
+        """Read the contents of the MPQ Archive Header
+        Replace the "read head" on the input file to the start of the file when done.
+        """
+        self.__replay_file.seek(self.__header_offset)
+        magic_file_id = unpack('=I', self.__replay_file.read(4))[0]
 
-        self.header_size, self.archive_size = unpack('=II', replay_file.read(8))
-        print 'header_size', self.header_size
-        print 'archive_size', self.archive_size
+        if ArchiveHeader.MAGIC_MPQ_VALUE != magic_file_id:
+            return False
 
-        self.format_version, self.sector_size_shift = unpack('=hB', replay_file.read(3))
-        print 'format_version', self.format_version
-        print 'sector_size_shift', self.sector_size_shift
+        self.__header_size, self.__archive_size = unpack('=II', self.__replay_file.read(8))
+        self.__format_version, self.__sector_size_shift = unpack('=hB', self.__replay_file.read(3))
+        self.__hash_table_offset, self.__block_table_offset, self.__hash_table_entries = \
+            unpack('=III', self.__replay_file.read(12))
+        self.__block_table_entries = unpack('=I', self.__replay_file.read(4))[0]
+        self.__extended_block_table_offset, self.__hash_table_offset_high, self.__block_table_offset_high = \
+            unpack('=QHH', self.__replay_file.read(12))
+        self.__replay_file.seek(0)
 
-        self.hash_table_offset, self.block_table_offset, self.hash_table_entries = \
-            unpack('=III', replay_file.read(12))
-        print 'hash_table_offset', self.hash_table_offset
-        print 'block_table_offset', self.block_table_offset
-        print 'hash_table_entries', self.hash_table_entries
-
-        self.block_table_entries = unpack('=I', replay_file.read(4))[0]
-        print 'block_table_entries', self.block_table_entries
-
-        # The following fields are only present after The Burning Crusade
-        self.extended_block_table_offset, self.hash_table_offset_high, self.block_table_offset_high = \
-            unpack('=QHH', replay_file.read(12))
-        print 'extended_block_table_offset', self.extended_block_table_offset
-        print 'hash_table_offset_high', self.hash_table_offset_high
-        print 'block_table_offset_high', self.block_table_offset_high
-
-        replay_file.close()
+    def __str__(self):
+        return 'MPQ Archive Header'
 
 if __name__ == "__main__":
     header = ArchiveHeader('samples/Victory-of-the-Year.SC2Replay')
-    if header.verify_file():
-        print 'Valid File'
-        header.read()
-    else:
-        print 'Not valid file'
+    header.read()
+    # if header.verify_file():
+    #     print 'Valid File'
+    #     header.read()
+    # else:
+    #     print 'Not valid file'
