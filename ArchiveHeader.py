@@ -7,7 +7,7 @@ class ArchiveHeader:
     STARCRAFT_2_MAGIC_NAME        = 'StarCraft II replay'
     STARCRAFT_2_MAGIC_NAME_OFFSET = 0x15
     STARCRAFT_2_MPQ_VALUE         = 458313805
-    MAGIC_MPQ_VALUE               = 441536589
+    MAGIC_MPQ_VALUE               = 441536589 #MPQ0x1A
 
     def __init__(self, file_name):
         """Instantiate a header reading object.
@@ -19,10 +19,7 @@ class ArchiveHeader:
         self.archive_size = 0
 
     def verify_file(self):
-        """Verify that this is, in fact, a Starcraft 2 replay file.
-        I'm not quite sure right now what the deal is with the 1024
-        bytes at the start of the file that seems
-        """
+        """Verify that this is, in fact, a Starcraft 2 replay file."""
         replay_file = open(self.file_name, 'rb')
         magic_sc2_value = unpack('=i', replay_file.read(4))[0]
         # Not exactly sure how this one works right now, but it's an
