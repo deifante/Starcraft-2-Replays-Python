@@ -43,6 +43,7 @@ class UserData(object):
         return True
 
     def __str__(self):
+        """Provide basic information about the User Data block."""
         return_value = '''MPQ User Data:
     Archive Header Offset: %u bytes
     User Data Size       : %u bytes''' % \
@@ -50,6 +51,9 @@ class UserData(object):
         return return_value
 
     def get_archive_header_offset(self):
+        """Provide external access to the archive header offset.
+        Read only access.
+        """
         return self.__archive_header_offset
 
     archive_header_offset = property(get_archive_header_offset)

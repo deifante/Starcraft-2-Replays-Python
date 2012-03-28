@@ -14,9 +14,10 @@ class ReaplayReader(object):
         self.user_data = UserData(self.file_contents)
         if not self.user_data.read():
             return False
+        print self.user_data        
         self.archive_header = ArchiveHeader(self.file_contents, self.user_data.archive_header_offset)
         self.archive_header.read()
-        print self.user_data
+        print self.archive_header
 
 if __name__ == "__main__":
     replay_reader = ReaplayReader('samples/Victory-of-the-Year.SC2Replay')

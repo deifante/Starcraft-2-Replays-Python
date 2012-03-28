@@ -23,7 +23,7 @@ class ArchiveHeader(object):
         self.__header_size                 = 0
         self.__replay_file                 = replay_file
         self.__sector_size_shift           = 0
-        self.__replay_file.seek(0)        
+        self.__replay_file.seek(0)
 
     def read(self):
         """Read the contents of the MPQ Archive Header
@@ -45,7 +45,20 @@ class ArchiveHeader(object):
         self.__replay_file.seek(0)
 
     def __str__(self):
-        return 'MPQ Archive Header'
+        return '''MPQ Archive Header
+    Archive Size                : %u bytes
+    Block Table Entries         : %u bytes
+    Block Table Offset          : %u bytes
+    Block Table Offset High     : %u bytes
+    Extended Block Table Offset : %u bytes
+    Format Version              : %u bytes
+    Hash Table Entries          : %u bytes
+    Hash Table Offset           : %u bytes
+    Hash Table Offset High      : %u bytes
+    Header Offset               : %u bytes
+    Header Size                 : %u bytes
+    Sector Size Shift           : %u bytes ''' % \
+            (self.__archive_size, self.__block_table_entries, self.__block_table_offset, self.__block_table_offset_high, self.__extended_block_table_offset, self.__format_version, self.__hash_table_entries, self.__hash_table_offset, self.__hash_table_offset_high, self.__header_offset, self.__header_size, self.__sector_size_shift)
 
 if __name__ == "__main__":
     header = ArchiveHeader('samples/Victory-of-the-Year.SC2Replay')
