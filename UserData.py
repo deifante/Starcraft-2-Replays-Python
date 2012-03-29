@@ -19,6 +19,9 @@ class UserData(object):
         self.__user_data             = None
         self.__archive_header_offset = 0
         self.__user_data_size        = 0
+        # Not really sure about the following data.
+        self.__major_version         = {'Initial Release':0, 'Patch':0}
+        self.__build_number          = 0
 
     def read(self):
         """"Verify that the User Data block is as expected.
@@ -33,8 +36,6 @@ class UserData(object):
         self.__user_data_size, self.__archive_header_offset = unpack('=II', self.__replay_file.read(8))
         self.__user_data = self.__replay_file.read(self.__user_data_size)
 
-        valid_data_length = unpack('=I', self.__user_data[:4])[0]
-
         sc2_user_data_replay = self.__user_data[
             UserData.USER_DATA_UNKNOWN_BLOCK_SIZE_0:
                 UserData.USER_DATA_UNKNOWN_BLOCK_SIZE_0 +
@@ -43,15 +44,24 @@ class UserData(object):
         if UserData.STARCRAFT_2_MAGIC_NAME != sc2_user_data_replay:
             return False
 
+        self.__major_version['Initial Release'], self.__major_version['Patch'] = \
+            unpack('=HH', self.__user_data[0x1C:0x1C+4])
+        self.__build_number = unpack('=H', self.__user_data[0x20:0x20+2])[0]
+
         self.__replay_file.seek(0)
         return True
 
     def __str__(self):
         """Provide basic information about the User Data block."""
         return_value = '''MPQ User Data:
-    Archive Header Offset: %u bytes
-    User Data Size       : %u bytes''' % \
-        (self.__archive_header_offset, self.__user_data_size)
+    Archive Header Offset : {0:6} bytes
+    User Data Size        : {1:6} bytes
+    Initial Release       : {2:6}
+    Patch                 : {3:6}
+    Build Number          : {4:6}
+'''.format(self.__archive_header_offset, self.__user_data_size,
+           self.__major_version['Initial Release'], self.__major_version['Patch'],
+           self.__build_number)
         return return_value
 
     def get_archive_header_offset(self):
@@ -60,4 +70,5 @@ class UserData(object):
         """
         return self.__archive_header_offset
 
+    # Read only property for the Archive Header Offset
     archive_header_offset = property(get_archive_header_offset)
