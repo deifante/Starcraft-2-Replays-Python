@@ -44,8 +44,7 @@ class UserData(object):
         if UserData.STARCRAFT_2_MAGIC_NAME != sc2_user_data_replay:
             return False
 
-        self.__major_version['Initial Release'], self.__major_version['Patch'] = \
-            unpack('=HH', self.__user_data[0x1C:0x1C+4])
+        self.__major_version['Initial Release'] = unpack('=b', self.__user_data[0x1C:0x1D])[0]
         self.__build_number = unpack('=H', self.__user_data[0x20:0x20+2])[0]
 
         self.__replay_file.seek(0)
