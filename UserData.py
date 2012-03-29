@@ -2,14 +2,18 @@ from struct import *
 
 class UserData(object):
     """Reads the user data block of the MPQ file."""
+
+    # This magic value is to be found as the first four bytes of
+    # a valid user data block
     STARCRAFT_2_USER_DATA_MAGIC_VALUE = 458313805 # MPQ0x1B
     STARCRAFT_2_MAGIC_NAME            = 'StarCraft II replay'
     USER_DATA_UNKNOWN_BLOCK_SIZE_0    = 9
 
     def __init__(self, replay_file):
         """Instantiate a User Data block reading object.
+
         Keword arguments:
-        input_file -- Already opened file
+        replay_file -- The already opened replay file.
         """
         self.__replay_file           = replay_file
         self.__user_data             = None
@@ -57,9 +61,3 @@ class UserData(object):
         return self.__archive_header_offset
 
     archive_header_offset = property(get_archive_header_offset)
-if __name__ == "__main__":
-    user_data = UserData('samples/Victory-of-the-Year.SC2Replay')
-    if user_data.read():
-        print 'User Data Read'
-    else:
-        print 'User Data Not Valid'

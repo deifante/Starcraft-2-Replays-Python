@@ -3,12 +3,16 @@ from struct import *
 class ArchiveHeader(object):
     """Reads the archive header of the sc2 replay files."""
 
-    MAGIC_MPQ_VALUE = 441536589 #MPQ0x1A
-    def __init__(self, replay_file, header_offset):
+    # This magic value is to be found as the first four bytes of
+    # a valid archive header
+    MAGIC_MPQ_VALUE = 441536589 # MPQ0x1A
+
+    def __init__(self, replay_file, user_data):
         """Instantiate a header reading object.
+
         Keyword arguments:
-        file_name -- the full path of the file. May be relative or absolute.
-        header_offset -- distance from the start of the file to the start of the Archive Header block
+        replay_file -- The already opened replay file.
+        header_offset -- The number of bytes from the start of the file to the start of the Archive Header block.
         """
         self.__archive_size                = 0
         self.__block_table_entries         = 0
@@ -19,15 +23,16 @@ class ArchiveHeader(object):
         self.__hash_table_entries          = 0
         self.__hash_table_offset           = 0
         self.__hash_table_offset_high      = 0
-        self.__header_offset               = header_offset
+        self.__header_offset               = user_data.archive_header_offset
         self.__header_size                 = 0
         self.__replay_file                 = replay_file
         self.__sector_size_shift           = 0
-        self.__replay_file.seek(0)
 
     def read(self):
         """Read the contents of the MPQ Archive Header
-        Replace the "read head" on the input file to the start of the file when done.
+
+        The method will replace the "read head" on the input
+        file to the start of the file when done.
         """
         self.__replay_file.seek(self.__header_offset)
         magic_file_id = unpack('=I', self.__replay_file.read(4))[0]
@@ -58,13 +63,7 @@ class ArchiveHeader(object):
     Header Offset               : %u bytes
     Header Size                 : %u bytes
     Sector Size Shift           : %u bytes ''' % \
-            (self.__archive_size, self.__block_table_entries, self.__block_table_offset, self.__block_table_offset_high, self.__extended_block_table_offset, self.__format_version, self.__hash_table_entries, self.__hash_table_offset, self.__hash_table_offset_high, self.__header_offset, self.__header_size, self.__sector_size_shift)
-
-if __name__ == "__main__":
-    header = ArchiveHeader('samples/Victory-of-the-Year.SC2Replay')
-    header.read()
-    # if header.verify_file():
-    #     print 'Valid File'
-    #     header.read()
-    # else:
-    #     print 'Not valid file'
+            (self.__archive_size, self.__block_table_entries, self.__block_table_offset,\
+                 self.__block_table_offset_high, self.__extended_block_table_offset, self.__format_version,\
+                 self.__hash_table_entries, self.__hash_table_offset, self.__hash_table_offset_high,\
+                 self.__header_offset, self.__header_size, self.__sector_size_shift)
