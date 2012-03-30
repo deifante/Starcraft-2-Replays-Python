@@ -1,5 +1,6 @@
 from ArchiveHeader import ArchiveHeader
 from UserData import UserData
+from BlockTable import BlockTable
 
 class ReaplayReader(object):
     """Takes responsibility for reading the entire replay."""
@@ -7,6 +8,7 @@ class ReaplayReader(object):
         self.file_name      = file_name
         self.user_data      = None
         self.archive_header = None
+        self.block_table    = None
         self.file_contents  = None
 
     def read(self):
@@ -21,8 +23,12 @@ class ReaplayReader(object):
             return False
         print self.archive_header
 
+        self.block_table = BlockTable(self.file_contents, self.archive_header)
+        self.block_table.read()
+        print self.block_table
+
 if __name__ == "__main__":
-    replay_reader = ReaplayReader('samples/Victory-of-the-Year.SC2Replay')
-    #replay_reader = ReaplayReader('samples/2v2.sc2replay')
+    #replay_reader = ReaplayReader('samples/Victory-of-the-Year.SC2Replay')
+    replay_reader = ReaplayReader('samples/2v2.sc2replay')
     replay_reader.read()
     print 'Done'

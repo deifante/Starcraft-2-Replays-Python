@@ -68,3 +68,13 @@ class ArchiveHeader(object):
            self.__block_table_offset_high, self.__extended_block_table_offset, self.__format_version,
            self.__hash_table_entries, self.__hash_table_offset, self.__hash_table_offset_high,
            self.__header_offset, self.__header_size, self.__sector_size_shift, 512 * 2**self.__sector_size_shift)
+
+    # self.__block_table_offset
+    def get_block_table_offset(self):
+        """Provide external access to the block table offset.
+        Read only access.
+        """
+        return self.__block_table_offset
+
+    # Read only property for the Block Table Offset
+    block_table_offset = property(get_block_table_offset)
