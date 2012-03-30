@@ -53,18 +53,18 @@ class ArchiveHeader(object):
     def __str__(self):
         return '''MPQ Archive Header
     Archive Size                : {0:9} bytes
-    Block Table Entries         : {1:9} bytes
+    Block Table Entries         : {1:9} entries
     Block Table Offset          : {2:9} bytes
     Block Table Offset High     : {3:9} bytes
     Extended Block Table Offset : {4:9} bytes
     Format Version              : {5:9}
-    Hash Table Entries          : {6:9}
+    Hash Table Entries          : {6:9} entries
     Hash Table Offset           : {7:9} bytes
     Hash Table Offset High      : {8:9} bytes
     Header Offset               : {9:9} bytes
     Header Size                 : {10:9} bytes
-    Sector Size Shift           : {11:9} bytes
+    Sector Size Shift           : {11} => ({12} bytes)
 '''.format(self.__archive_size, self.__block_table_entries, self.__block_table_offset,
            self.__block_table_offset_high, self.__extended_block_table_offset, self.__format_version,
            self.__hash_table_entries, self.__hash_table_offset, self.__hash_table_offset_high,
-           self.__header_offset, self.__header_size, self.__sector_size_shift)
+           self.__header_offset, self.__header_size, self.__sector_size_shift, 512 * 2**self.__sector_size_shift)
