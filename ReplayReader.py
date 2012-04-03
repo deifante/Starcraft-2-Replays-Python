@@ -28,7 +28,7 @@ class ReaplayReader(object):
         print self.block_table
 
 if __name__ == "__main__":
-    #replay_reader = ReaplayReader('samples/Victory-of-the-Year.SC2Replay')
-    replay_reader = ReaplayReader('samples/2v2.sc2replay')
+    replay_reader = ReaplayReader('samples/Victory-of-the-Year.SC2Replay')
+    #replay_reader = ReaplayReader('samples/2v2.sc2replay')
     replay_reader.read()
     print 'Done'

@@ -41,7 +41,7 @@ class ArchiveHeader(object):
             return False
 
         self.__header_size, self.__archive_size = unpack('=II', self.__replay_file.read(8))
-        self.__format_version, self.__sector_size_shift = unpack('=hB', self.__replay_file.read(3))
+        self.__format_version, self.__sector_size_shift = unpack('=hh', self.__replay_file.read(4))
         self.__hash_table_offset, self.__block_table_offset, self.__hash_table_entries = \
             unpack('=III', self.__replay_file.read(12))
         self.__block_table_entries = unpack('=I', self.__replay_file.read(4))[0]
