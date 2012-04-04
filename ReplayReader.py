@@ -1,10 +1,12 @@
+from struct import *
+
 from ArchiveHeader import ArchiveHeader
 from UserData import UserData
 from BlockTable import BlockTable
 
 class ReaplayReader(object):
     """Takes responsibility for reading the entire replay.
-    Also implements some general use algorithms
+    Also implements some general use algorithms.
     """
     def __init__(self, file_name):
         self.file_name      = file_name
@@ -14,7 +16,6 @@ class ReaplayReader(object):
         self.file_contents  = None
         self.crypt_table    = range(0x500)
         self.create_crypt_table()
-        print self.crypt_table
 
     def read(self):
         self.file_contents = open(self.file_name, 'rb')
@@ -45,6 +46,17 @@ class ReaplayReader(object):
                 temp2 = seed & 0xFFFF
                 self.crypt_table[index2] = (temp1 | temp2)
                 index2 += 0x100
+
+    def decrypt(self, data_block, length, key):
+        seed = 0xEEEEEEEE
+        length >> 2
+        data_block_index
+
+        while(length > 0):
+            length -= 1
+            seed += self.crypt_table[0x400 + (key & 0xFF)]
+            ch = unpack('=I', data_block[data_block_index:data_block_index + 4]) ^ (key + seed)
+        
 
 if __name__ == "__main__":
     #replay_reader = ReaplayReader('samples/Victory-of-the-Year.SC2Replay')
