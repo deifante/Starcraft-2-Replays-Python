@@ -27,13 +27,13 @@ class UserData(object):
         """"Verify that the User Data block is as expected.
         Replace the "read head" on the input file to the start of the file.
         """
-        data_buffer = self.__replay_file.read(4)
-        magic_value = unpack('=i', data_buffer)[0]
-        if UserData.STARCRAFT_2_USER_DATA_MAGIC_VALUE != magic_value:
-            self.__replay_file.close()
+        user_data_struct = Struct('=3I')
+        user_data_tuple = user_data_struct.unpack_from(self.__replay_file.read(12))
+
+        if UserData.STARCRAFT_2_USER_DATA_MAGIC_VALUE != user_data_tuple[0]:
             return False
 
-        self.__user_data_size, self.__archive_header_offset = unpack('=II', self.__replay_file.read(8))
+        self.__user_data_size, self.__archive_header_offset = user_data_tuple[1:]
         self.__user_data = self.__replay_file.read(self.__user_data_size)
 
         sc2_user_data_replay = self.__user_data[
@@ -44,8 +44,9 @@ class UserData(object):
         if UserData.STARCRAFT_2_MAGIC_NAME != sc2_user_data_replay:
             return False
 
-        self.__major_version['Initial Release'] = unpack('=b', self.__user_data[0x1C:0x1D])[0]
-        self.__build_number = unpack('=H', self.__user_data[0x20:0x20+2])[0]
+        experimental_struct = Struct('=b3xH')
+        self.__major_version['Initial Release'], self.__build_number = \
+        experimental_struct.unpack_from(self.__user_data, 0x1C)
 
         self.__replay_file.seek(0)
         return True
