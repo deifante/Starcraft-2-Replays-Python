@@ -20,13 +20,13 @@ class BlockTable(object):
 
     def read(self):
         self.__replay_file.seek(self.__archive_header.block_table_offset)
-        # self.__block_offset, self.__block_size, self.__file_size, self.__flags = \
-        #     unpack('=IIII', self.__replay_file.read(16))
+        self.__block_offset, self.__block_size, self.__file_size, self.__flags = \
+            unpack('=IIII', self.__replay_file.read(16))
 
     def __str__(self):
         return '''MPQ Block Table
    Block Offset :{0:9}
-   Block Size   :{0:9}
-   File Size    :{0:9}
-   Flags        :{0:9}
+   Block Size   :{1:9}
+   File Size    :{2:9}
+   Flags        :{3:9}
 '''.format(self.__block_offset, self.__block_size, self.__file_size, self.__flags)

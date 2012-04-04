@@ -78,3 +78,13 @@ class ArchiveHeader(object):
 
     # Read only property for the Block Table Offset
     block_table_offset = property(get_block_table_offset)
+
+
+    def get_block_table_entries(self):
+        """Provide external access to the number of Block Table entries.
+        Read only access.
+        """
+        return self.__block_table_entries
+
+    # Read only property for the Block Table Entries
+    block_table_entries =  property(get_block_table_entries)
