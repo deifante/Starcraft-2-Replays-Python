@@ -3,13 +3,18 @@ from UserData import UserData
 from BlockTable import BlockTable
 
 class ReaplayReader(object):
-    """Takes responsibility for reading the entire replay."""
+    """Takes responsibility for reading the entire replay.
+    Also implements some general use algorithms
+    """
     def __init__(self, file_name):
         self.file_name      = file_name
         self.user_data      = None
         self.archive_header = None
         self.block_table    = None
         self.file_contents  = None
+        self.crypt_table    = range(0x500)
+        self.create_crypt_table()
+        print self.crypt_table
 
     def read(self):
         self.file_contents = open(self.file_name, 'rb')
@@ -26,6 +31,20 @@ class ReaplayReader(object):
         self.block_table = BlockTable(self.file_contents, self.archive_header)
         self.block_table.read()
         print self.block_table
+
+    def create_crypt_table(self):
+        seed = 0x00100001
+        
+        for index1 in range(0x100):
+            index2 = index1
+            for i in range(5):
+                seed = (seed * 125 + 3) % 0x2AAAAB
+                temp1 = (seed & 0xFFFF) << 0x10
+
+                seed = (seed * 125 + 3) % 0x2AAAAB
+                temp2 = seed & 0xFFFF
+                self.crypt_table[index2] = (temp1 | temp2)
+                index2 += 0x100
 
 if __name__ == "__main__":
     #replay_reader = ReaplayReader('samples/Victory-of-the-Year.SC2Replay')
