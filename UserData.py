@@ -1,4 +1,4 @@
-from struct import *
+from struct import Struct
 
 class UserData(object):
     """Reads the user data block of the MPQ file."""

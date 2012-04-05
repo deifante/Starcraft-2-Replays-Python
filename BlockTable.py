@@ -19,9 +19,10 @@ class BlockTable(object):
         self.__replay_file = replay_file
 
     def read(self):
+        block_table_struct = Struct('=4I')
         self.__replay_file.seek(self.__archive_header.block_table_offset)
         self.__block_offset, self.__block_size, self.__file_size, self.__flags = \
-            unpack('=IIII', self.__replay_file.read(16))
+            block_table_struct.unpack_from(self.__replay_file.read(16))
 
     def __str__(self):
         return '''MPQ Block Table
