@@ -52,14 +52,24 @@ class ReaplayReader(object):
         length >> 2
         data_block_index
 
-        while(length > 0):
-            length -= 1
-            seed += self.crypt_table[0x400 + (key & 0xFF)]
-            ch = unpack('=I', data_block[data_block_index:data_block_index + 4]) ^ (key + seed)
+        # while(length > 0):
+        #     length -= 1
+        #     seed += self.crypt_table[0x400 + (key & 0xFF)]
+        #     ch = unpack('=I', data_block[data_block_index:data_block_index + 4]) ^ (key + seed)
+
+
+    def hash(self, name, hash_type):
+        seed1 = 0x7FED7FED
+        seed2 = 0xEEEEEEEE
         
+        for ch in name:
+            seed1 = self.crypt_table[(hash_type << 8) + ch] ^ (seed1 + seed2)
+            seed2 = ch + seed1 + seed2 + (seed2 << 5) + 3
+        return seed1
 
 if __name__ == "__main__":
-    #replay_reader = ReaplayReader('samples/Victory-of-the-Year.SC2Replay')
-    replay_reader = ReaplayReader('samples/2v2.sc2replay')
+    replay_reader = ReaplayReader('samples/Victory-of-the-Year.SC2Replay')
+    #replay_reader = ReaplayReader('samples/2v2.sc2replay')
+    print replay_reader.hash('arr\units.dat', 1)
     replay_reader.read()
     print 'Done'
