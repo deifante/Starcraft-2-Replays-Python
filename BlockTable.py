@@ -2,7 +2,7 @@ from struct import *
 
 class BlockTable(object):
     """Reads a Block Table from a Starcraft 2 Replay."""
-    
+
     def __init__(self, replay_file, archive_header):
         """Instantiate a block table reading object.
 
