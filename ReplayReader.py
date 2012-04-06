@@ -4,7 +4,7 @@ from ArchiveHeader import ArchiveHeader
 from UserData import UserData
 from BlockTable import BlockTable
 
-class ReaplayReader(object):
+class ReplayReader(object):
     """Takes responsibility for reading the entire replay.
     Also implements some general use algorithms.
     """
@@ -61,15 +61,18 @@ class ReaplayReader(object):
     def hash(self, name, hash_type):
         seed1 = 0x7FED7FED
         seed2 = 0xEEEEEEEE
-        
+
         for ch in name:
-            seed1 = self.crypt_table[(hash_type << 8) + ch] ^ (seed1 + seed2)
-            seed2 = ch + seed1 + seed2 + (seed2 << 5) + 3
+            ch = ord(ch.upper())
+            seed1 = self.crypt_table[(hash_type << 8) + ch] ^ (seed1 + seed2) & 0xFFFFFFFF
+            seed2 = ch + seed1 + seed2 + (seed2 << 5) + 3 & 0xFFFFFFFF
         return seed1
 
 if __name__ == "__main__":
-    replay_reader = ReaplayReader('samples/Victory-of-the-Year.SC2Replay')
-    #replay_reader = ReaplayReader('samples/2v2.sc2replay')
-    print replay_reader.hash('arr\units.dat', 1)
-    replay_reader.read()
+    replay_reader = ReplayReader('samples/Victory-of-the-Year.SC2Replay')
+    #replay_reader = ReplayReader('samples/2v2.sc2replay')
+    # replay_reader.read()
+    hash_value = replay_reader.hash('arr\units.dat', 0)
+    print 'hash value: Ox{0:X}\nhash value type:{1}'.format(hash_value, type(hash_value))
+
     print 'Done'
