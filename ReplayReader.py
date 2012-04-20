@@ -1,4 +1,5 @@
 from struct import *
+import StringIO
 
 from ArchiveHeader import ArchiveHeader
 from UserData import UserData
@@ -48,14 +49,27 @@ class ReplayReader(object):
                 index2 += 0x100
 
     def decrypt(self, data_block, length, key):
+        """in place, length is in bytes, key is an int"""
         seed = 0xEEEEEEEE
-        length >> 2
-        data_block_index
+        # round to int32's
+        # If the data isn't a multiple of int32s, then the remaining bytes will
+        # not get decrypted.
+        length >>= 2
+        data_block_index = 0
+        accumulator = StringIO.StringIO()
+        print 'start value of length', length
+        while(length > 0):
+            length -= 1
+            print 'loop (length {0})'.format(length)
+            seed += self._crypt_table[0x400 + (key & 0xFF)]
+            ch = unpack('=I', data_block[data_block_index:data_block_index + 4])[0] ^ ((key + seed) & 0xFFFFFFFF)
+            key = ((((~key << 0x15) & 0xFFFFFFFF) + 0x11111111) & 0xFFFFFFFF) | (key >> 0x0B)
+            seed = (ch + seed + (seed << 5) + 3) & 0xFFFFFFFF
+            print 'ch', ch
+            accumulator.write(pack("=I", ch))
+            data_block_index += 4
 
-        # while(length > 0):
-        #     length -= 1
-        #     seed += self._crypt_table[0x400 + (key & 0xFF)]
-        #     ch = unpack('=I', data_block[data_block_index:data_block_index + 4]) ^ (key + seed)
+        return accumulator.getvalue()
 
 
     def hash(self, name, hash_type):
@@ -72,7 +86,18 @@ if __name__ == "__main__":
     replay_reader = ReplayReader('samples/Victory-of-the-Year.SC2Replay')
     #replay_reader = ReplayReader('samples/2v2.sc2replay')
     # replay_reader.read()
-    hash_value = replay_reader.hash('arr\units.dat', 0)
-    print 'hash value: Ox{0:X}\nhash value type:{1}'.format(hash_value, type(hash_value))
+    # hash_string = 'arr\\units.dat'
+    # hash_value = replay_reader.hash(hash_string, 0)
+    # print 'hash value of "{2}": Ox{0:X}\nhash value type:{1}'.format(hash_value, type(hash_value), hash_string)
 
+    hash_string = 'unit\\neutral\\acritter.grp'
+    # hash_value = replay_reader.hash(hash_string, 0)
+    # print 'hash value of "{2}": Ox{0:X}\nhash value type:{1}'.format(hash_value, type(hash_value), hash_string)
+    value = '123'
+    orig_len = len(value)
+    value = replay_reader.decrypt(value, orig_len, 14)
+    print 'len(value):', len(value)
+    print 'type(value):', type(value)
+    value = unpack('={0}b'.format(orig_len), value[0:orig_len])
+    print 'value', value
     print 'Done'
