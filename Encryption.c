@@ -10,20 +10,28 @@ unsigned int HashString(unsigned char *str, unsigned int hashType);
 
 int main()
 {
-  int i=0;
+  int i = 0;
   unsigned int hashValue = 0;
   char * str = 0;
+  int length = 0;
 
-  str = calloc(24, 1);
+  str = calloc(26, 1);
   InitialiseCryptTable();
   strcpy(str, "arr\\units.dat");
 
-  for(i=0; i<4; ++i)
-    printf("hashValue{%d} of '%s' = 0x%X\n", i, str, HashString(str, i));
+  /* for(i=0; i<4; ++i) */
+  /*   printf("hashValue{%d} of '%s' = 0x%X\n", i, str, HashString(str, i)); */
 
   strcpy(str, "unit\\neutral\\acritter.grp");
-  for(i=0; i<4; ++i)
-    printf("hashValue{%d} of '%s' = 0x%X\n", i, str, HashString(str, i));
+  /* for(i=0; i<4; ++i) */
+  /*   printf("hashValue{%d} of '%s' = 0x%X\n", i, str, HashString(str, i)); */
+
+  strcpy(str, "1234567");
+  length = (int)strlen(str);
+  printf("Decrypted Data (%s): ", str);
+  DecryptData((void*)str, (unsigned int)strlen(str), 14);
+  for(i=0; i<length; ++i)
+      printf("%d ", (int)str[i]);
 
   free(str);
   printf("Done\n");
@@ -58,13 +66,18 @@ void DecryptData(void * buffer, unsigned int length, unsigned int key)
   unsigned int seed = 0xEEEEEEEE;
   unsigned int ch   = 0;
 
+  // If the data isn't a multiple of ints then the remaining bytes
+  // will not get decrypted.
   length >>= 2;
+  printf("start value of length %d\n", length);
   while (length-- > 0)
     {
       seed += cryptTable[0x400 + (key & 0xFF)];
+      printf("loop (length %d)\n", length);
       ch = *intBuffer ^ (key + seed);
       key = ((~key << 0x15) + 0x11111111) | (key >> 0x0B);
       seed = ch + seed + (seed << 5) + 3;
+      printf("ch: %u\n", ch);
       *intBuffer++ = ch;
     }
 }
