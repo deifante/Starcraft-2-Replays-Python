@@ -29,7 +29,7 @@ class ReplayReader(object):
             return False
         print self.archive_header
 
-        self.block_table = BlockTable(self.file_contents, self.archive_header)
+        self.block_table = BlockTable(self.file_contents, self.archive_header, self)
         self.block_table.read()
         print self.block_table
 
@@ -49,14 +49,18 @@ class ReplayReader(object):
 
     def decrypt(self, data_block, length, key):
         seed = 0xEEEEEEEE
-        length >> 2
-        data_block_index
+        ch = 0
+        length >>= 2
+        data_block_index = 0
 
-        # while(length > 0):
-        #     length -= 1
-        #     seed += self.crypt_table[0x400 + (key & 0xFF)]
-        #     ch = unpack('=I', data_block[data_block_index:data_block_index + 4]) ^ (key + seed)
-
+        while(length > 0):
+            length -= 1
+            seed += self.crypt_table[0x400 + (key & 0xFF)] & 0xFFFFFFFF
+            ch = unpack('=I', data_block[data_block_index:data_block_index + 4])[0] ^ ((key + seed) & 0xFFFFFFFF)
+            key = ((((~key << 0x15) & 0xFFFFFFFF) + 0x11111111) & 0xFFFFFFFF) | (key >> 0x0B)
+            seed = (ch + seed + (seed << 5) + 3) & 0xFFFFFFFF
+            pack_into('=I', data_block[data_block_index:data_block_index + 4], 0, ch)
+            data_block_index += 4
 
     def hash(self, name, hash_type):
         seed1 = 0x7FED7FED
@@ -71,8 +75,12 @@ class ReplayReader(object):
 if __name__ == "__main__":
     replay_reader = ReplayReader('samples/Victory-of-the-Year.SC2Replay')
     #replay_reader = ReplayReader('samples/2v2.sc2replay')
-    # replay_reader.read()
-    hash_value = replay_reader.hash('arr\units.dat', 0)
-    print 'hash value: Ox{0:X}\nhash value type:{1}'.format(hash_value, type(hash_value))
+    replay_reader.read()
+    # for i in range(4):
+    #     hash_value = replay_reader.hash('arr\\units.dat', i)
+    #     print 'hash value: Ox{0:X}\nhash value type:{1}'.format(hash_value, type(hash_value))
+    # for i in range(4):
+    #     hash_value = replay_reader.hash('unit\\neutral\\acritter.grp', i)
+    #     print 'hash value: Ox{0:X}\nhash value type:{1}'.format(hash_value, type(hash_value))
 
     print 'Done'
