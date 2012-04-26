@@ -30,7 +30,7 @@ class ReplayReader(object):
             return False
         print self._archive_header
 
-        self._block_table = BlockTable(self._file_contents, self._archive_header)
+        self._block_table = BlockTable(self._file_contents, self._archive_header, self)
         self._block_table.read()
         print self._block_table
 
@@ -68,15 +68,6 @@ class ReplayReader(object):
 
         return accumulator.getvalue()
 
-        while(length > 0):
-            length -= 1
-            seed += self.crypt_table[0x400 + (key & 0xFF)] & 0xFFFFFFFF
-            ch = unpack('=I', data_block[data_block_index:data_block_index + 4])[0] ^ ((key + seed) & 0xFFFFFFFF)
-            key = ((((~key << 0x15) & 0xFFFFFFFF) + 0x11111111) & 0xFFFFFFFF) | (key >> 0x0B)
-            seed = (ch + seed + (seed << 5) + 3) & 0xFFFFFFFF
-            pack_into('=I', data_block[data_block_index:data_block_index + 4], 0, ch)
-            data_block_index += 4
-
     def hash(self, name, hash_type):
         seed1 = 0x7FED7FED
         seed2 = 0xEEEEEEEE
@@ -88,7 +79,7 @@ class ReplayReader(object):
         return seed1
 
 if __name__ == "__main__":
-    #replay_reader = ReplayReader('samples/Victory-of-the-Year.SC2Replay')
+    # replay_reader = ReplayReader('samples/Victory-of-the-Year.SC2Replay')
     replay_reader = ReplayReader('samples/2v2.sc2replay')
     replay_reader.read()
     # hash_string = 'arr\\units.dat'

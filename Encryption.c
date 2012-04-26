@@ -6,7 +6,9 @@
 unsigned int cryptTable[0x500];
 void InitialiseCryptTable();
 void DecryptData(void * buffer, unsigned int length, unsigned int key);
+void DecryptBlock(void *block, int length, unsigned int key);
 unsigned int HashString(unsigned char *str, unsigned int hashType);
+unsigned int HashStringBlue(char *lpszFileName, unsigned int dwHashType);
 
 int main()
 {
@@ -14,40 +16,58 @@ int main()
   unsigned int hashValue = 0;
   char * str = 0;
   int length = 0;
+  int encryptedBlockData[4];
+  encryptedBlockData[0] = 824787133;
+  encryptedBlockData[1] = 2393494642;
+  encryptedBlockData[2] = 2479920305;
+  encryptedBlockData[3] = 3368241304;
 
-  str = calloc(26, 1);
+  /* str = calloc(26, 1); */
   InitialiseCryptTable();
-  strcpy(str, "arr\\units.dat");
+  /* strcpy(str, "arr\\units.dat"); */
 
   /* for(i=0; i<4; ++i) */
   /*   printf("hashValue{%d} of '%s' = 0x%X\n", i, str, HashString(str, i)); */
-
-  strcpy(str, "unit\\neutral\\acritter.grp");
+  
+  /* strcpy(str, "unit\\neutral\\acritter.grp"); */
   /* for(i=0; i<4; ++i) */
   /*   printf("hashValue{%d} of '%s' = 0x%X\n", i, str, HashString(str, i)); */
 
-  strcpy(str, "1234567");
-  length = (int)strlen(str);
-  printf("Decrypted Data (%s): ", str);
-  DecryptData((void*)str, (unsigned int)strlen(str), 14);
-  for(i=0; i<length; ++i)
-      printf("%d ", (int)str[i]);
+  /* strcpy(str, "1234567"); */
+  /* length = (int)strlen(str); */
+  /* printf("Decrypted Data (%s): ", str); */
+  /* DecryptData((void*)str, (unsigned int)strlen(str), 14); */
+  /* for(i=0; i<length; ++i) */
+  /*     printf("%d ", (int)str[i]); */
 
-  free(str);
+  /* free(str); */
+
+  hashValue = HashStringBlue("(block table)", 3);
+  printf("Decrypt Key: %X\n", hashValue);
+
+  printf("Before\n\t");
+  for(i=0; i<4; ++i)
+      printf("%u ", encryptedBlockData[i]);
+  puts("");
+  //DecryptData((void*)encryptedBlockData, (unsigned int)(sizeof(int)*4), hashValue);
+  DecryptBlock((void*)encryptedBlockData, (unsigned int)(sizeof(int)*4), hashValue);
+  printf("After\n\t");
+  for(i=0; i<4; ++i)
+      printf("%u ", encryptedBlockData[i]);
   printf("Done\n");
 }
 
 void InitialiseCryptTable()
 {
-  unsigned int seed   = 0x00100001;
-  unsigned int index1 = 0;
-  unsigned int index2 = 0;
-  unsigned int temp1 = 0;
-  unsigned int temp2 = 0;
-  int i = 0;
+ unsigned int seed   = 0x00100001;
+ unsigned int index1 = 0;
+ unsigned int index2 = 0;
+ unsigned int temp1  = 0;
+ unsigned int temp2  = 0;
+ int i = 0;
 
-  for(index1 = 0; index1 < 0x100; index1++)
-    {
+ for(index1 = 0; index1 < 0x100; index1++)
+   {
       for (index2 = index1, i = 0; i < 5; i++, index2 += 0x100)
         {
           seed = (seed * 125 + 3) % 0x2AAAAB;
@@ -82,6 +102,27 @@ void DecryptData(void * buffer, unsigned int length, unsigned int key)
     }
 }
 
+void DecryptBlock(void *block, int length, unsigned int key)
+{ 
+    unsigned int seed = 0xEEEEEEEE;
+    unsigned int ch = 0;
+    unsigned int *castBlock = (unsigned int *)block;
+
+    // Round to longs
+    length >>= 2;
+
+    while(length-- > 0)
+    { 
+        seed += cryptTable[0x400 + (key & 0xFF)];
+        ch = *castBlock ^ (key + seed);
+
+        key = ((~key << 0x15) + 0x11111111) | (key >> 0x0B);
+        seed = ch + seed + (seed << 5) + 3;
+        *castBlock++ = ch; 
+    } 
+}
+
+
 unsigned int HashString(unsigned char *str, unsigned int hashType)
 {
   unsigned int seed1 = 0x7FED7FED;
@@ -95,4 +136,21 @@ unsigned int HashString(unsigned char *str, unsigned int hashType)
       seed2 = ch + seed1 + seed2 + (seed2 << 5 ) + 3;
     }
   return seed1;
+}
+
+unsigned int HashStringBlue(char *lpszFileName, unsigned int dwHashType)
+{ 
+    unsigned char *key = (unsigned char *)lpszFileName;
+    unsigned int seed1 = 0x7FED7FED;
+    unsigned int seed2 = 0xEEEEEEEE;
+    int ch;
+
+    while(*key != 0)
+    { 
+        ch = toupper(*key++);
+
+        seed1 = cryptTable[(dwHashType << 8) + ch] ^ (seed1 + seed2);
+        seed2 = ch + seed1 + seed2 + (seed2 << 5) + 3; 
+    }
+    return seed1; 
 }

@@ -34,7 +34,7 @@ class ArchiveHeader(object):
         The method will replace the "read head" on the input
         file to the start of the file when done.
         """
-        archive_header_struct = Struct('=3I2h4IQ2H')
+        archive_header_struct = Struct('=3I2H4IQ2H')
         self._replay_file.seek(self._header_offset)
         archive_header_tuple = archive_header_struct.unpack_from(self._replay_file.read(44))
 
@@ -84,3 +84,12 @@ class ArchiveHeader(object):
 
     # Read only property for the Block Table Entries
     block_table_entries =  property(get_block_table_entries)
+
+    def get_header_offset(self):
+        """Provide external access to the header offset.
+        Read only access.
+        """
+        return self._header_offset
+
+    # Read only property for the Block Table Offset
+    header_offset = property(get_header_offset)
