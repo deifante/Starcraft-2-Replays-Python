@@ -1,7 +1,14 @@
 from struct import Struct
+from collections import namedtuple
 
 class ArchiveHeader(object):
     """Reads the archive header of the sc2 replay files."""
+    ArchiveHeaderTuple = namedtuple('ArchiveHeaderTuple',
+                                    ['magic', 'header_size', 'archive_size','format_version',
+                                     'sector_size_shift', 'hash_table_offset', 'block_table_offset',
+                                     'hash_table_entries', 'block_table_entries',
+                                     'extended_block_table_offset', 'hash_table_offset_high',
+                                     'block_table_offset_high'])
 
     # This magic value is to be found as the first four bytes of
     # a valid archive header
@@ -14,19 +21,9 @@ class ArchiveHeader(object):
         replay_file -- The already opened replay file.
         user_data -- User Data information from the same replay file.
         """
-        self._archive_size                = 0
-        self._block_table_entries         = 0
-        self._block_table_offset          = 0
-        self._block_table_offset_high     = 0
-        self._extended_block_table_offset = 0
-        self._format_version              = 0
-        self._hash_table_entries          = 0
-        self._hash_table_offset           = 0
-        self._hash_table_offset_high      = 0
-        self._header_offset               = user_data.archive_header_offset
-        self._header_size                 = 0
-        self._replay_file                 = replay_file
-        self._sector_size_shift           = 0
+        self._archive_header = None
+        self._replay_file    = replay_file
+        self._header_offset  = user_data.archive_header_offset
 
     def read(self):
         """Read the contents of the MPQ Archive Header
@@ -36,15 +33,12 @@ class ArchiveHeader(object):
         """
         archive_header_struct = Struct('=3I2H4IQ2H')
         self._replay_file.seek(self._header_offset)
-        archive_header_tuple = archive_header_struct.unpack_from(self._replay_file.read(44))
+        self._archive_header = ArchiveHeader.ArchiveHeaderTuple._make(
+            archive_header_struct.unpack_from(self._replay_file.read(44)))
 
-        if ArchiveHeader.MAGIC_MPQ_VALUE != archive_header_tuple[0]:
+        if ArchiveHeader.MAGIC_MPQ_VALUE != self._archive_header.magic:
             return False
 
-        self._header_size, self._archive_size, self._format_version, self._sector_size_shift, \
-        self._hash_table_offset, self._block_table_offset, self._hash_table_entries, \
-        self._block_table_entries, self._extended_block_table_offset, self._hash_table_offset_high, \
-        self._block_table_offset_high = archive_header_tuple[1:]
         self._replay_file.seek(0)
         return True
 
@@ -62,16 +56,19 @@ class ArchiveHeader(object):
     Header Offset               : {9:9} bytes
     Header Size                 : {10:9} bytes
     Sector Size Shift           : {11} => ({12} bytes)
-'''.format(self._archive_size, self._block_table_entries, self._block_table_offset,
-           self._block_table_offset_high, self._extended_block_table_offset, self._format_version,
-           self._hash_table_entries, self._hash_table_offset, self._hash_table_offset_high,
-           self._header_offset, self._header_size, self._sector_size_shift, 512 * 2**self._sector_size_shift)
+'''.format(self._archive_header.archive_size, self._archive_header.block_table_entries,
+           self._archive_header.block_table_offset, self._archive_header.block_table_offset_high,
+           self._archive_header.extended_block_table_offset, self._archive_header.format_version,
+           self._archive_header.hash_table_entries, self._archive_header.hash_table_offset,
+           self._archive_header.hash_table_offset_high, self._header_offset,
+           self._archive_header.header_size,
+           self._archive_header.sector_size_shift, 512 * 2**self._archive_header.sector_size_shift)
 
     def get_block_table_offset(self):
         """Provide external access to the block table offset.
         Read only access.
         """
-        return self._block_table_offset
+        return self._archive_header.block_table_offset
 
     # Read only property for the Block Table Offset
     block_table_offset = property(get_block_table_offset)
@@ -80,7 +77,7 @@ class ArchiveHeader(object):
         """Provide external access to the number of Block Table entries.
         Read only access.
         """
-        return self._block_table_entries
+        return self._archive_header.block_table_entries
 
     # Read only property for the Block Table Entries
     block_table_entries =  property(get_block_table_entries)

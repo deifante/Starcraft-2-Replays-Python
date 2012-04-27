@@ -1,6 +1,5 @@
-from struct import *
+from struct import Struct
 from collections import namedtuple
-#import collections
 
 class BlockTable(object):
     """Reads a Block Table from a Starcraft 2 Replay."""
@@ -12,13 +11,7 @@ class BlockTable(object):
         replay_file -- The already opened replay file.
         archive_header -- Archive Header information from the same replay file.
         """
-        # self._block_offset = 0
-        # self._block_size   = 0
-        # self._file_size    = 0
-        # self._flags        = 0
-        self._table = None# BlockTable.BlockTableTuple(0, 0, 0, 0)
-        #b = BlockTable.BlockTableTuple(0, 0, 0, 0)
-
+        self._block_table    = None
         self._archive_header = archive_header
         self._replay_file    = replay_file
         self._replay_reader  = replay_reader
@@ -45,15 +38,13 @@ class BlockTable(object):
 
        # I expect this to fail because decrypted_block_table will be to long... and of an incompatible type
        # perhaps I can read a 16 byte (4*int32s) chunk @ a time?
-       # self._block_offset, self._block_size, self._file_size, self._flags = block_table_struct.unpack_from(decrypted_block_table)
        self._table = BlockTable.BlockTableTuple._make(block_table_struct.unpack_from(decrypted_block_table))
+       self._replay_file.seek(0)
 
     def __str__(self):
-        print 'type: ', self._table
         return '''MPQ Block Table
    Block Offset :{0:9}
    Block Size   :{1:9}
    File Size    :{2:9}
    Flags        :{3:9}
 '''.format(self._table.block_offset, self._table.block_size, self._table.file_size, self._table.flags)
-
