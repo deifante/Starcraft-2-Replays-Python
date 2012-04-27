@@ -6,9 +6,7 @@
 unsigned int cryptTable[0x500];
 void InitialiseCryptTable();
 void DecryptData(void * buffer, unsigned int length, unsigned int key);
-void DecryptBlock(void *block, int length, unsigned int key);
 unsigned int HashString(unsigned char *str, unsigned int hashType);
-unsigned int HashStringBlue(char *lpszFileName, unsigned int dwHashType);
 
 int main()
 {
@@ -49,8 +47,7 @@ int main()
   for(i=0; i<4; ++i)
       printf("%u ", encryptedBlockData[i]);
   puts("");
-  //DecryptData((void*)encryptedBlockData, (unsigned int)(sizeof(int)*4), hashValue);
-  DecryptBlock((void*)encryptedBlockData, (unsigned int)(sizeof(int)*4), hashValue);
+  DecryptData((void*)encryptedBlockData, (unsigned int)(sizeof(int)*4), hashValue);
   printf("After\n\t");
   for(i=0; i<4; ++i)
       printf("%u ", encryptedBlockData[i]);
@@ -102,27 +99,6 @@ void DecryptData(void * buffer, unsigned int length, unsigned int key)
     }
 }
 
-void DecryptBlock(void *block, int length, unsigned int key)
-{ 
-    unsigned int seed = 0xEEEEEEEE;
-    unsigned int ch = 0;
-    unsigned int *castBlock = (unsigned int *)block;
-
-    // Round to longs
-    length >>= 2;
-
-    while(length-- > 0)
-    { 
-        seed += cryptTable[0x400 + (key & 0xFF)];
-        ch = *castBlock ^ (key + seed);
-
-        key = ((~key << 0x15) + 0x11111111) | (key >> 0x0B);
-        seed = ch + seed + (seed << 5) + 3;
-        *castBlock++ = ch; 
-    } 
-}
-
-
 unsigned int HashString(unsigned char *str, unsigned int hashType)
 {
   unsigned int seed1 = 0x7FED7FED;
@@ -136,21 +112,4 @@ unsigned int HashString(unsigned char *str, unsigned int hashType)
       seed2 = ch + seed1 + seed2 + (seed2 << 5 ) + 3;
     }
   return seed1;
-}
-
-unsigned int HashStringBlue(char *lpszFileName, unsigned int dwHashType)
-{ 
-    unsigned char *key = (unsigned char *)lpszFileName;
-    unsigned int seed1 = 0x7FED7FED;
-    unsigned int seed2 = 0xEEEEEEEE;
-    int ch;
-
-    while(*key != 0)
-    { 
-        ch = toupper(*key++);
-
-        seed1 = cryptTable[(dwHashType << 8) + ch] ^ (seed1 + seed2);
-        seed2 = ch + seed1 + seed2 + (seed2 << 5) + 3; 
-    }
-    return seed1; 
 }

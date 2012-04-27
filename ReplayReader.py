@@ -82,14 +82,4 @@ if __name__ == "__main__":
     # replay_reader = ReplayReader('samples/Victory-of-the-Year.SC2Replay')
     replay_reader = ReplayReader('samples/2v2.sc2replay')
     replay_reader.read()
-    # hash_string = 'arr\\units.dat'
-    # hash_value = replay_reader.hash(hash_string, 0)
-    # print 'hash value of "{2}": Ox{0:X}\nhash value type:{1}'.format(hash_value, type(hash_value), hash_string)
-    # hash_string = 'unit\\neutral\\acritter.grp'
-    # hash_value = replay_reader.hash(hash_string, 0)
-    # print 'hash value of "{2}": Ox{0:X}\nhash value type:{1}'.format(hash_value, type(hash_value), hash_string)
-    # value = '1234'
-    # orig_len = len(value)
-    # value = replay_reader.decrypt(value, orig_len, 14)
-    # value = unpack('={0}b'.format(orig_len), value[0:orig_len])
     print 'Done'
